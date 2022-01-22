@@ -47,6 +47,7 @@ def register():
         new_user = User(username=form.username.data, password = hash)
         db.session.add(new_user)
         db.session.commit()
+
         return redirect(url_for('login'))
     else:
         flash("Username already taken.")

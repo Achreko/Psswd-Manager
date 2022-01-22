@@ -29,7 +29,9 @@ class RegistrationForm(FlaskForm):
                 "This username is already taken. Please choose a different one.")
     
     def validate_password(self, password):
-        if  not password.data.isalnum():
+        if  password.data.isalnum() or \
+        re.search(r"[A-Z]+", password.data) == None or \
+        re.search(r"[0-9]", password.data) == None:
             raise ValidationError(
                 "Password has to contain at least 1 digit, uppercase letter and nonalphanumeric character.")
   
