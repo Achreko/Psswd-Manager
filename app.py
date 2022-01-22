@@ -2,16 +2,20 @@ from flask import Flask, render_template, url_for,redirect, flash
 from db_storage import *
 from flask_bcrypt import Bcrypt
 from flask_login import login_user, LoginManager, login_required, logout_user
+import os
 
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'test'
+def create_app():
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SECRET_KEY'] = os.urandom(32)
+    db.init_app(app)
+    return app
+app = create_app()
 
 
 bcrypt = Bcrypt()
-db.init_app(app)
 
 
 login_manager = LoginManager()
@@ -50,7 +54,7 @@ def register():
 
         return redirect(url_for('login'))
     else:
-        flash("Username already taken.")
+        flash(form.msg)
 
     return render_template('register.html', form = form)
 
@@ -65,5 +69,21 @@ def login():
                 return redirect(url_for('dashboard'))
     return render_template('login.html', form = form)
 
+@app.route('/forgot', methods=['GET', 'POST'])
+def forgot():
+    form = ForgetForm()
+
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user:
+            flash(f"Normally there would be a reset email sent to {form.em.data}")
+    else:
+        flash(form.msg)
+
+    return render_template('forgot.html', form = form)
+
+
 if __name__ == '__main__':
     app.run(ssl_context=('cert/test.crt', 'cert/test.key'), debug=True )
+
+
