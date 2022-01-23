@@ -15,6 +15,10 @@
         {{form.password}}
         {{form.submit}}
     </form>
+{% for message in get_flashed_messages() %}
+    <font color ="red">{{message}} </font>
+{% endfor %}
+    <br>
     <a href="{{url_for('register')}}"> Don't have an account? Register!</a><br>
     <a href="{{url_for('forgot')}}"> Forgot your password? Set a new one!</a><br>
 </body>

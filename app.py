@@ -3,6 +3,9 @@ from db_storage import *
 from flask_bcrypt import Bcrypt
 from flask_login import login_user, LoginManager, login_required, logout_user
 import os
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
 
 
 def create_app():
@@ -13,7 +16,11 @@ def create_app():
     db.init_app(app)
     return app
 app = create_app()
-
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    default_limits=["50 per day", "5 per minute", "1 per second"]
+)
 
 bcrypt = Bcrypt()
 
@@ -67,6 +74,12 @@ def login():
             if bcrypt.check_password_hash(user.password, form.password.data):
                 login_user(user)
                 return redirect(url_for('dashboard'))
+            else:
+                flash("Wrong username or password.")
+        else:
+            flash("Wrong username or password.")
+
+
     return render_template('login.html', form = form)
 
 @app.route('/forgot', methods=['GET', 'POST'])
@@ -77,13 +90,14 @@ def forgot():
         user = User.query.filter_by(username=form.username.data).first()
         if user:
             flash(f"Normally there would be a reset email sent to {form.em.data}")
-    else:
-        flash(form.msg)
+        else:
+            flash(form.msg)
 
     return render_template('forgot.html', form = form)
 
 
 if __name__ == '__main__':
+    #LATER CHANGE TO NGINX + GUNICORN IF ENOUGH TIME 
     app.run(ssl_context=('cert/test.crt', 'cert/test.key'), debug=True )
 
 
