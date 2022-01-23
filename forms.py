@@ -30,12 +30,17 @@ class RegistrationForm(FlaskForm):
   
 
 class LoginForm(FlaskForm):
-    msg = ""
-    username = StringField(validators=[InputRequired(), Length(min = 5, max=20)], render_kw={"placeholder": "Username"})
-    password = PasswordField(validators=[InputRequired(), Length(min = 5, max=20)], render_kw={"placeholder": "Password"})
+    username = StringField(validators=[InputRequired(), Length(min = 5, max=40)], render_kw={"placeholder": "Username"})
+    password = PasswordField(validators=[InputRequired(), Length(min = 5, max=25)], render_kw={"placeholder": "Password"})
 
     submit = SubmitField("Login")
 
+
+class AddPsswdForm(FlaskForm):
+    site_adress = StringField(validators=[InputRequired(), Length(min = 5, max=20)], render_kw={"placeholder": "Site adress"})
+    password = PasswordField(validators=[InputRequired(), Length(min = 5, max=20)], render_kw={"placeholder": "Password"})
+
+    submit = SubmitField("Add to vault")
 
 class ForgetForm(FlaskForm):
     msg = ""

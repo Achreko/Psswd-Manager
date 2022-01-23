@@ -9,7 +9,8 @@ class User(db.Model, UserMixin):
 
 class Psswd(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    site = db.Column(db.String(50),  nullable=False)
+    username = db.Column(db.String(20), nullable=False)
+    site_adress = db.Column(db.String(50),  nullable=False)
     password = db.Column(db.String(100), nullable=False)
 
 

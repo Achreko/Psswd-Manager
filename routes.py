@@ -13,12 +13,14 @@ bcrypt = Bcrypt()
 limiter = Limiter(
     app,
     key_func=get_remote_address,
-    default_limits=["50 per day", "5 per minute", "1 per second"]
+    default_limits=["50 per day", "10/minute", "1 per second"]
 )
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
+
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -39,6 +41,20 @@ def logout():
 def dashboard():
     return render_template("dashboard.html")
 
+
+@app.route('/dashboard/add', methods=['GET', 'POST'])
+@login_required
+def dashboard_add():
+    form = AddPsswdForm()
+
+    if form.validate_on_submit():
+        new_psswd = Psswd(username = "usr_name",site_adress = form.site_adress.data, password = form.password.data)
+        db.session.add(new_psswd)
+        db.session.commit()
+
+        return redirect(url_for('dashboard'))
+
+    return render_template("dashboard_add.html", form = form)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
