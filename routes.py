@@ -33,6 +33,7 @@ def load_user(user_id):
 
 
 @app.route('/dashboard/delete/<int:id>')
+@login_required
 def delete(id):
     pswd_to_del = Psswd.query.get_or_404(id)
 
