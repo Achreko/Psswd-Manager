@@ -1,5 +1,6 @@
-from app import app, clear_data
+from app import app
 from routes import *
+from models import clear_data
 
 if __name__ == '__main__':
     #LATER CHANGE TO NGINX + GUNICORN IF ENOUGH TIME 

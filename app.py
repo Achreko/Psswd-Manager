@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import os
 
+
 def create_app():
     app = Flask(__name__)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
@@ -10,10 +11,3 @@ def create_app():
     return app
 app = create_app()
 db = SQLAlchemy(app)
-
-def clear_data():
-    db.drop_all()
-    db.create_all()
-
-
-

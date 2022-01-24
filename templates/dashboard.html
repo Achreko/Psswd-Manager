@@ -1,5 +1,10 @@
 <!DOCTYPE html>
 <html>
+<style>
+    table, th, td {
+        border:1px solid black;
+    }
+</style>
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -7,8 +12,30 @@
     <title>Dashboard</title>
 </head>
 <body>
-<h1> Your stored passwords are visible below:</h1>
-<a href="{{url_for('dashboard_add')}}">Add password to vault</a><br>
-<a href="{{url_for('logout')}}">Logout</a>
+    <h1> Your stored passwords are visible below:</h1>
+    {% for msg in get_flashed_messages() %}
+        {{message}}
+    {% endfor %}
+    <table style="width: 50" align="center">
+        <tr>
+            <th> ID</th>
+            <th> Email adress</th>
+            <th> Site name</th>
+            <th> Password </th>
+            <th> Delete </th>
+        </tr>
+        {% for pswd in passwrd_list %}
+        <tr>
+            <td> {{pswd.id}}</td>
+            <td> {{pswd.em}}</td>
+            <td>{{pswd.site_adress}}</td>
+            <td>{{pswd.password}}</td>
+            <td><a href="{{url_for('delete',id=pswd.id)}}">Delete</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+    <br>
+    <a href="{{url_for('dashboard_add')}}">Add password to vault</a><br>
+    <a href="{{url_for('logout')}}">Logout</a>
 </body>
 </html>

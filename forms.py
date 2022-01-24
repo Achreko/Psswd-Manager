@@ -1,4 +1,4 @@
-from wtforms import StringField, PasswordField, SubmitField
+from wtforms import StringField, PasswordField, SubmitField, EmailField
 from wtforms.validators import Email, InputRequired, Length, ValidationError
 import re
 from flask_wtf import FlaskForm
@@ -37,6 +37,7 @@ class LoginForm(FlaskForm):
 
 
 class AddPsswdForm(FlaskForm):
+    em = EmailField(validators=[InputRequired(), Length(min = 7, max=40), Email()], render_kw={"placeholder": "Email adress"})
     site_adress = StringField(validators=[InputRequired(), Length(min = 5, max=20)], render_kw={"placeholder": "Site adress"})
     password = PasswordField(validators=[InputRequired(), Length(min = 5, max=20)], render_kw={"placeholder": "Password"})
 
@@ -44,7 +45,7 @@ class AddPsswdForm(FlaskForm):
 
 class ForgetForm(FlaskForm):
     msg = ""
-    em = StringField(validators=[InputRequired(), Length(min = 7, max=40), Email() ], render_kw={"placeholder": "Email"})
+    em = EmailField(validators=[InputRequired(), Length(min = 7, max=40), Email() ], render_kw={"placeholder": "Email"})
     username = StringField(validators=[InputRequired(), Length(min = 7, max=20)], render_kw={"placeholder": "Username"})
 
     def validate_username(self, username):
