@@ -7,7 +7,7 @@ from models import *
 class RegistrationForm(FlaskForm):
     msg = ""
     username = StringField(validators=[InputRequired(), Length(min = 7, max=20)], render_kw={"placeholder": "Username"})
-    password = PasswordField(validators=[InputRequired(), Length(min = 7, max=20)], render_kw={"placeholder": "Password"})
+    password = PasswordField(validators=[InputRequired(), Length(min = 7, max=32)], render_kw={"placeholder": "Password"})
 
     submit = SubmitField("Register")
 
@@ -30,8 +30,8 @@ class RegistrationForm(FlaskForm):
   
 
 class LoginForm(FlaskForm):
-    username = StringField(validators=[InputRequired(), Length(min = 5, max=40)], render_kw={"placeholder": "Username"})
-    password = PasswordField(validators=[InputRequired(), Length(min = 5, max=25)], render_kw={"placeholder": "Password"})
+    username = StringField(validators=[InputRequired(), Length(min = 5, max=20)], render_kw={"placeholder": "Username"})
+    password = PasswordField(validators=[InputRequired(), Length(min = 5, max=32)], render_kw={"placeholder": "Password"})
 
     submit = SubmitField("Login")
 

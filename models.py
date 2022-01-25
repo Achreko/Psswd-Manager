@@ -13,6 +13,7 @@ class Psswd(db.Model):
     username = db.Column(db.String(20), nullable=False)
     site_adress = db.Column(db.String(50),  nullable=False)
     password = db.Column(db.String(100), nullable=False)
+    iv = db.Column(db.String(100), nullable=False)
 
 
 def clear_data():
