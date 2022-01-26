@@ -21,6 +21,7 @@
     {% endfor %}
 
     <h2>Password has to contain at least 1 digit, 1 uppercase letter and 1 nonalphanumeric character.</h2>
+    <strong> No "<" and ">" allowed! </strong><br>
     <a href="{{url_for('login')}}"> Already have an account? Log in!</a><br>
 </body>
 </html>

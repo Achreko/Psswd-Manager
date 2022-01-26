@@ -17,6 +17,10 @@
     {{form.submit}}
 </form>
 
+{% for msg in get_flashed_messages() %}
+    {{msg}}
+{% endfor %}
+
 <a href="{{url_for('dashboard')}}">Back to dashboard</a>
 
 </body>

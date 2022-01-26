@@ -22,11 +22,16 @@ class RegistrationForm(FlaskForm):
     
     def validate_password(self, password):
         if  password.data.isalnum() or \
-        re.search(r"[A-Z]+", password.data) == None or \
-        re.search(r"[0-9]", password.data) == None:
+            re.search(r"[A-Z]+", password.data) == None or \
+            re.search(r"[0-9]", password.data) == None:
             self.msg = "Password has to contain at least 1 digit, uppercase letter and nonalphanumeric character."
             raise ValidationError(
                 "Password has to contain at least 1 digit, uppercase letter and nonalphanumeric character.")
+        if  password.data.find("<") != -1 or \
+            password.data.find(">") != -1:
+            self.msg = "Password cannot contain '<' and '>' symbols."
+            raise ValidationError(
+                "Password cannot contain '<' and '>' symbols.")
   
 
 class LoginForm(FlaskForm):
@@ -42,6 +47,14 @@ class AddPsswdForm(FlaskForm):
     password = PasswordField(validators=[InputRequired(), Length(min = 5, max=20)], render_kw={"placeholder": "Password"})
 
     submit = SubmitField("Add to vault")
+
+    def validate_password(self, password):
+        if  password.data.find("<") != -1 or \
+            password.data.find(">") != -1:
+            self.msg = "Password cannot contain '<' and '>' symbols."
+            raise ValidationError(
+                "Password cannot contain '<' and '>' symbols.")
+
 
 class ForgetForm(FlaskForm):
     msg = ""
