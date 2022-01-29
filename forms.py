@@ -12,6 +12,11 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField("Register")
 
     def validate_username(self, username):
+        if  username.data.find("<") != -1 or \
+            username.data.find(">") != -1:
+            self.msg = "Username cannot contain '<' and '>' symbols."
+            raise ValidationError(
+                "Username cannot contain '<' and '>' symbols.")
         exitsting_users = User.query.filter_by(
             username = username.data).first()
 
@@ -39,21 +44,41 @@ class LoginForm(FlaskForm):
     password = PasswordField(validators=[InputRequired(), Length(min = 5, max=32)], render_kw={"placeholder": "Password"})
 
     submit = SubmitField("Login")
-
-
-class AddPsswdForm(FlaskForm):
-    em = EmailField(validators=[InputRequired(), Length(min = 7, max=40), Email()], render_kw={"placeholder": "Email adress"})
-    site_adress = StringField(validators=[InputRequired(), Length(min = 5, max=20)], render_kw={"placeholder": "Site adress"})
-    password = PasswordField(validators=[InputRequired(), Length(min = 5, max=20)], render_kw={"placeholder": "Password"})
-
-    submit = SubmitField("Add to vault")
-
+    def validate_username(self, username):
+        if  username.data.find("<") != -1 or \
+            username.data.find(">") != -1:
+            self.msg = "Username cannot contain '<' and '>' symbols."
+            raise ValidationError(
+                "Username cannot contain '<' and '>' symbols.")
     def validate_password(self, password):
         if  password.data.find("<") != -1 or \
             password.data.find(">") != -1:
             self.msg = "Password cannot contain '<' and '>' symbols."
             raise ValidationError(
                 "Password cannot contain '<' and '>' symbols.")
+
+
+
+class AddPsswdForm(FlaskForm):
+    msg = ""
+    em = EmailField(validators=[InputRequired(), Length(min = 7, max=40), Email()], render_kw={"placeholder": "Email adress"})
+    site_adress = StringField(validators=[InputRequired(), Length(min = 5, max=20)], render_kw={"placeholder": "Site adress"})
+    password = PasswordField(validators=[InputRequired(), Length(min = 5, max=20)], render_kw={"placeholder": "Password"})
+    master_password = PasswordField(validators=[InputRequired(), Length(min = 5, max=32)], render_kw={"placeholder": "Master Password"})
+    submit = SubmitField("Add to vault")
+
+    def validate_em(self, em):
+        if  em.data.find("<") != -1 or \
+            em.data.find(">") != -1:
+            self.msg = "No field can contain '<' and '>' symbols."
+            raise ValidationError(
+                "No field can contain '<' and '>' symbols.")
+    def validate_password(self, password):
+        if  password.data.find("<") != -1 or \
+            password.data.find(">") != -1:
+            self.msg = "No field can contain '<' and '>' symbols."
+            raise ValidationError(
+                "No field can contain '<' and '>' symbols.")
 
 
 class ForgetForm(FlaskForm):
