@@ -1,4 +1,4 @@
-from flask import render_template, url_for,redirect, flash
+from flask import render_template, url_for,redirect, flash, make_response, request 
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_bcrypt import Bcrypt
@@ -7,14 +7,11 @@ from app import app, db
 from forms import *
 from models import *
 from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad, unpad
+from Crypto.Protocol.KDF import PBKDF2
+from Crypto.Random import get_random_bytes
+from Crypto.Hash import SHA512
 
-bcrypt = Bcrypt()
-
-BLOCK_SIZE = 16
-
-usr_name = ""
-key = b""
+BLOCKSIZE = 16
 limiter = Limiter(
     app,
     key_func=get_remote_address,
@@ -36,59 +33,35 @@ def load_user(user_id):
 @login_required
 def delete(id):
     pswd_to_del = Psswd.query.get_or_404(id)
+    username = request.cookies.get("username")
 
     try:
+        if pswd_to_del.username != username:
+            raise Exception("Unable to delete password.")
         db.session.delete(pswd_to_del)
         db.session.commit()
         flash("Password successfully deleted!")
        
-    except:
+    except Exception:
         flash("Unable to delete password.")
     finally:
-        passwrd_list = Psswd.query.filter_by(username = usr_name).all()
-        if passwrd_list:
-            cipher = AES.new(key, AES.MODE_ECB)
-            for el in passwrd_list:
-                el.password = unpad(cipher.decrypt(el.password), BLOCK_SIZE).decode()
-        return render_template("dashboard.html", passwrd_list = passwrd_list)
+        return redirect(url_for("dashboard"))
 
-# @app.route('/dashboard/update/<int:id>')
-# def update(id):
-#     pswd_to_up = Psswd.query.filter_by(id = id).first()
-
-#     try:
-#         pswd_to_up
-#         db.session.commit()
-#         flash("Password successfully deleted!")
-       
-#     except:
-#         flash("Unable to delete password.")
-#     finally:
-#         passwrd_list = Psswd.query.filter_by(username = usr_name).all()
-#         if passwrd_list:
-#             cipher = AES.new(key, AES.MODE_ECB)
-#             for el in passwrd_list:
-#                 el.password = unpad(cipher.decrypt(el.password), BLOCK_SIZE).decode()
-#         return render_template("dashboard.html", passwrd_list = passwrd_list)
 
 @app.route('/logout', methods=['GET', 'POST'])
 @login_required
 def logout():
-    global usr_name
-    global key
-    usr_name = ""
-    key = b""
     logout_user()
     return redirect(url_for('login'))
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    passwrd_list = Psswd.query.filter_by(username = usr_name).all()
-    if passwrd_list:
-        cipher = AES.new(key, AES.MODE_ECB)
-        for el in passwrd_list:
-            el.password = unpad(cipher.decrypt(el.password), BLOCK_SIZE).decode()
+
+    user = request.cookies.get("username")
+    passwrd_list = Psswd.query.filter_by(username = user).all()
+
+    
     return render_template("dashboard.html", passwrd_list = passwrd_list)
 
 
@@ -96,16 +69,28 @@ def dashboard():
 @login_required
 def dashboard_add():
     form = AddPsswdForm()
+    username = request.cookies.get("username")
+    print(username)
 
     if form.validate_on_submit():
-        data_padded = pad( form.password.data.encode(), BLOCK_SIZE)
-        cipher = AES.new(key, AES.MODE_ECB)
-        new_psswd = Psswd(em = form.em.data, username = usr_name,site_adress = form.site_adress.data,
-         password = cipher.encrypt(data_padded))
-        db.session.add(new_psswd)
-        db.session.commit()
-
-        return redirect(url_for('dashboard'))
+        bcrypt = Bcrypt()
+        user = User.query.filter_by(username=username).first()
+        if bcrypt.check_password_hash(user.password, form.master_password.data):
+            salt = get_random_bytes(BLOCKSIZE)
+            key = PBKDF2(form.master_password.data, salt, count=1000000,hmac_hash_module=SHA512 )
+            iv = get_random_bytes(BLOCKSIZE)
+            cipher = AES.new(key, AES.MODE_CBC, iv)
+            encrypted = cipher.encrypt(pad_data(form.password.data).encode())
+            new_psswd = Psswd(em = form.em.data, username =username,
+             site_adress = form.site_adress.data, password = encrypted,
+             iv= iv )
+            db.session.add(new_psswd)
+            db.session.commit()
+            return redirect(url_for('dashboard'))
+        else:
+            flash("Wrong master password.")
+    else:
+        flash(form.msg)
 
     return render_template("dashboard_add.html", form = form)
 
@@ -114,6 +99,7 @@ def register():
     form = RegistrationForm()
 
     if form.validate_on_submit():
+        bcrypt = Bcrypt()
         hash = bcrypt.generate_password_hash(form.password.data)
         new_user = User(username=form.username.data, password = hash)
         db.session.add(new_user)
@@ -127,15 +113,16 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    global usr_name
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user:
+            bcrypt = Bcrypt()
             if bcrypt.check_password_hash(user.password, form.password.data):
                 login_user(user)
-                after_login(form.username.data, form.password.data)
-                return redirect(url_for('dashboard'))
+                resp = make_response(redirect(url_for("dashboard")))
+                resp.set_cookie('username', user.username.encode(), secure=True)
+                return resp
             else:
                 flash("Wrong username or password.")
         else:
@@ -161,8 +148,8 @@ def forgot():
 def home():
     return render_template('startpage.html')
 
-def after_login(name, master):
-    global key
-    global usr_name
-    usr_name = name
-    key = pad(master.encode(), BLOCK_SIZE)
+
+def pad_data(data):
+    while len(data)%16 !=0:
+        data += " "
+    return data
