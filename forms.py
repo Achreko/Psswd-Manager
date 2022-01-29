@@ -79,6 +79,12 @@ class AddPsswdForm(FlaskForm):
             self.msg = "No field can contain '<' and '>' symbols."
             raise ValidationError(
                 "No field can contain '<' and '>' symbols.")
+    def validate_site_adress(self, site_adress):
+        if  site_adress.data.find("<") != -1 or \
+            site_adress.data.find(">") != -1:
+            self.msg = "No field can contain '<' and '>' symbols."
+            raise ValidationError(
+                "No field can contain '<' and '>' symbols.")
 
 
 class ForgetForm(FlaskForm):
