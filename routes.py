@@ -8,9 +8,8 @@ from app import app, db
 from forms import *
 from models import *
 from Crypto.Cipher import AES
-from Crypto.Protocol.KDF import PBKDF2
+from Crypto.Protocol.KDF import bcrypt
 from Crypto.Random import get_random_bytes
-from Crypto.Hash import SHA512
 from Crypto.Util.Padding import pad, unpad
 
 BLOCKSIZE = 16
@@ -37,9 +36,9 @@ def show(id):
     form = PasForm()
     username = request.cookies.get("username")
     if form.validate_on_submit():
-        bcrypt = Bcrypt()
+        crypt = Bcrypt()
         user = User.query.filter_by(username=username).first()
-        if bcrypt.check_password_hash(user.password, form.password.data):
+        if crypt.check_password_hash(user.password, form.password.data):
             secret = Psswd.query.get_or_404(id)
             cipher = AES.new(key, AES.MODE_CBC, base64.b64decode(secret.iv))
             decrypted = unpad(cipher.decrypt(secret.password), BLOCKSIZE)
@@ -94,11 +93,10 @@ def dashboard_add():
     username = request.cookies.get("username")
 
     if form.validate_on_submit():
-        bcrypt = Bcrypt()
+        crypt = Bcrypt()
         user = User.query.filter_by(username=username).first()
-        if bcrypt.check_password_hash(user.password, form.master_password.data):
-            salt = get_random_bytes(BLOCKSIZE)
-            key = PBKDF2(form.master_password.data, salt, count=1000000,hmac_hash_module=SHA512 )
+        if crypt.check_password_hash(user.password, form.master_password.data):
+            key = bcrypt(form.master_password.data.encode(), 13)
             iv = get_random_bytes(BLOCKSIZE)
             cipher = AES.new(key, AES.MODE_CBC, iv)
             encrypted = cipher.encrypt(pad(form.password.data.encode(), BLOCKSIZE))
@@ -120,8 +118,8 @@ def register():
     form = RegistrationForm()
 
     if form.validate_on_submit():
-        bcrypt = Bcrypt()
-        hash = bcrypt.generate_password_hash(form.password.data)
+        crypt = Bcrypt()
+        hash = crypt.generate_password_hash(form.password.data)
         new_user = User(username=form.username.data, password = hash)
         db.session.add(new_user)
         db.session.commit()
