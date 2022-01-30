@@ -102,3 +102,13 @@ class ForgetForm(FlaskForm):
                 "There is no user with that username.")
 
     submit = SubmitField("Send reset link")
+
+class PasForm(FlaskForm):
+    msg = ""
+    password = PasswordField(validators=[InputRequired(), Length(min = 5, max=32)], render_kw={"placeholder": "Master Password"})
+    def validate_password(self, password):
+        if  password.data.find("<") != -1 or \
+            password.data.find(">") != -1:
+            self.msg = "Password cannot contain '<' and '>' symbols."
+            raise ValidationError(
+                "Password cannot contain '<' and '>' symbols.")

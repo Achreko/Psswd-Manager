@@ -1,3 +1,4 @@
+import base64
 from flask import render_template, url_for,redirect, flash, make_response, request 
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -10,6 +11,7 @@ from Crypto.Cipher import AES
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
 from Crypto.Hash import SHA512
+from Crypto.Util.Padding import pad, unpad
 
 BLOCKSIZE = 16
 limiter = Limiter(
@@ -27,6 +29,26 @@ login_manager.login_view = "login"
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(user_id)
+
+
+@app.route('/dashboard/view/<int:id>', methods=['GET','POST'])
+@login_required
+def show(id):
+    form = PasForm()
+    username = request.cookies.get("username")
+    if form.validate_on_submit():
+        bcrypt = Bcrypt()
+        user = User.query.filter_by(username=username).first()
+        if bcrypt.check_password_hash(user.password, form.password.data):
+            secret = Psswd.query.get_or_404(id)
+            cipher = AES.new(key, AES.MODE_CBC, base64.b64decode(secret.iv))
+            decrypted = unpad(cipher.decrypt(secret.password), BLOCKSIZE)
+            flash(f"Decrypted password for is {decrypted}. ")
+        else:
+            flash("Wrong master password.")
+    else:
+        flash(form.msg)
+    return render_template("show.html", form = form)
 
 
 @app.route('/dashboard/delete/<int:id>')
@@ -70,7 +92,6 @@ def dashboard():
 def dashboard_add():
     form = AddPsswdForm()
     username = request.cookies.get("username")
-    print(username)
 
     if form.validate_on_submit():
         bcrypt = Bcrypt()
@@ -80,10 +101,10 @@ def dashboard_add():
             key = PBKDF2(form.master_password.data, salt, count=1000000,hmac_hash_module=SHA512 )
             iv = get_random_bytes(BLOCKSIZE)
             cipher = AES.new(key, AES.MODE_CBC, iv)
-            encrypted = cipher.encrypt(pad_data(form.password.data).encode())
+            encrypted = cipher.encrypt(pad(form.password.data.encode(), BLOCKSIZE))
             new_psswd = Psswd(em = form.em.data, username =username,
              site_adress = form.site_adress.data, password = encrypted,
-             iv= iv )
+             iv= base64.b64encode(iv)  )
             db.session.add(new_psswd)
             db.session.commit()
             return redirect(url_for('dashboard'))
@@ -147,9 +168,3 @@ def forgot():
 @app.route('/')
 def home():
     return render_template('startpage.html')
-
-
-def pad_data(data):
-    while len(data)%16 !=0:
-        data += " "
-    return data

@@ -27,7 +27,7 @@
         <tr>
             <td> {{pswd.em}}</td>
             <td>{{pswd.site_adress}}</td>
-            <td>{{pswd.password}}</td>
+            <td><a href="{{url_for('show',id=pswd.id)}}">Show password</a></td>
             <td><a href="{{url_for('delete',id=pswd.id)}}">Delete</a></td>
         </tr>
         {% endfor %}

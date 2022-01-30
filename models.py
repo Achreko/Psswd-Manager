@@ -23,7 +23,6 @@ def clear_data():
     hash = bcrypt.generate_password_hash("kochamPW#1")
     new_user = User(username="test645", password = hash)
     db.session.add(new_user)
-    db.session.commit()
     hash = bcrypt.generate_password_hash("kochamPW#2")
     new_user_1 = User(username="testowy", password = hash)
     db.session.add(new_user_1)
