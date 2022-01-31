@@ -8,7 +8,7 @@ from app import app, db
 from forms import *
 from models import *
 from Crypto.Cipher import AES
-from Crypto.Protocol.KDF import bcrypt
+from Crypto.Hash import SHA256
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
 
@@ -40,9 +40,11 @@ def show(id):
         user = User.query.filter_by(username=username).first()
         if crypt.check_password_hash(user.password, form.password.data):
             secret = Psswd.query.get_or_404(id)
+            key = SHA256.new(form.password.data.encode()).digest()
             cipher = AES.new(key, AES.MODE_CBC, base64.b64decode(secret.iv))
             decrypted = unpad(cipher.decrypt(secret.password), BLOCKSIZE)
-            flash(f"Decrypted password for is {decrypted}. ")
+            flash(f"Decrypted password  is {decrypted.decode()}. ")
+            return redirect(url_for("dashboard"))
         else:
             flash("Wrong master password.")
     else:
@@ -96,9 +98,9 @@ def dashboard_add():
         crypt = Bcrypt()
         user = User.query.filter_by(username=username).first()
         if crypt.check_password_hash(user.password, form.master_password.data):
-            key = bcrypt(form.master_password.data.encode(), 13)
+            sha = SHA256.new(form.master_password.data.encode())
             iv = get_random_bytes(BLOCKSIZE)
-            cipher = AES.new(key, AES.MODE_CBC, iv)
+            cipher = AES.new(sha.digest(), AES.MODE_CBC, iv)
             encrypted = cipher.encrypt(pad(form.password.data.encode(), BLOCKSIZE))
             new_psswd = Psswd(em = form.em.data, username =username,
              site_adress = form.site_adress.data, password = encrypted,
