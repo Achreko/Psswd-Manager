@@ -4,6 +4,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_bcrypt import Bcrypt
 from flask_login import login_user, LoginManager, login_required, logout_user
+import flask_login
 from app import app, db
 from forms import *
 from models import *
@@ -34,7 +35,7 @@ def load_user(user_id):
 @login_required
 def show(id):
     form = PasForm()
-    username = request.cookies.get("username")
+    username = flask_login.current_user.username
     if form.validate_on_submit():
         crypt = Bcrypt()
         user = User.query.filter_by(username=username).first()
@@ -56,7 +57,7 @@ def show(id):
 @login_required
 def delete(id):
     pswd_to_del = Psswd.query.get_or_404(id)
-    username = request.cookies.get("username")
+    username = flask_login.current_user.username
 
     try:
         if pswd_to_del.username != username:
@@ -81,7 +82,7 @@ def logout():
 @login_required
 def dashboard():
 
-    user = request.cookies.get("username")
+    user = flask_login.current_user.username
     passwrd_list = Psswd.query.filter_by(username = user).all()
 
     
@@ -92,7 +93,7 @@ def dashboard():
 @login_required
 def dashboard_add():
     form = AddPsswdForm()
-    username = request.cookies.get("username")
+    username = flask_login.current_user.username
 
     if form.validate_on_submit():
         crypt = Bcrypt()
